@@ -1,43 +1,31 @@
-from flask import Flask,request,jsonify,render_template
-
+from flask import Flask, request, jsonify, render_template
 import pickle
 import numpy as np
 import pandas as pd
 import os
-import pickle
-from huggingface_hub import hf_hub_download
 
-rf_regressor = None
-preprocessor = None
-
+# Flask app
 application = Flask(__name__)
 app = application
 
-def load_models():
-    global rf_regressor, preprocessor
+# ✅ Load models safely
+base_dir = os.path.dirname(__file__)
 
-    if rf_regressor is None:
-        model_path = hf_hub_download(
-            repo_id="Annabeth08/crop-yield-model",
-            filename="rf_regressor.pkl"
-        )
+preprocessor_path = os.path.join(base_dir, "preprocessor.pkl")
+rf_model_path = os.path.join(base_dir, "rf_regressor.pkl")
 
-rf_regressor=pickle.load(open('models/rf_regressor.pkl','rb'))
-preprocessor=pickle.load(open('models/preprocessor.pkl','rb'))
-application=Flask(__name__)   
+preprocessor = pickle.load(open(preprocessor_path, "rb"))
+rf_regressor = pickle.load(open(rf_model_path, "rb"))
 
-app=application  
-
+# Home route
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/predict_data', methods=['GET','POST'])
+# Prediction route
+@app.route('/predict_data', methods=['POST'])
 def predict():
-
-    if request.method == 'POST':
-
-        load_models()
+    try:
         data = request.get_json()
 
         Area = data['area']
@@ -56,6 +44,7 @@ def predict():
             'avg_temp': avg_temp
         }])
 
+        # Transform + Predict
         transformed_data = preprocessor.transform(input_df)
         result = rf_regressor.predict(transformed_data)
 
@@ -65,12 +54,10 @@ def predict():
             "region": Area
         })
 
-    else:
-        return render_template('home.html')
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
-if __name__=="__main__":  
-    app.run(debug=True)     
-
+# Run app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
