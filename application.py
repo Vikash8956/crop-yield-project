@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, render_template
+ from flask import Flask, request, jsonify, render_template
 import pickle
 import numpy as np
 import pandas as pd
 import os
+from huggingface_hub import hf_hub_download   # ✅ ADD THIS
 
 # Flask app
 application = Flask(__name__)
@@ -11,10 +12,16 @@ app = application
 # ✅ Load models safely
 base_dir = os.path.dirname(__file__)
 
+# local preprocessor (GitHub me hai)
 preprocessor_path = os.path.join(base_dir, "preprocessor.pkl")
-rf_model_path = os.path.join(base_dir, "rf_regressor.pkl")
-
 preprocessor = pickle.load(open(preprocessor_path, "rb"))
+
+# ✅ Hugging Face se model download
+rf_model_path = hf_hub_download(
+    repo_id="Vikash12223456/crop-yield-model",
+    filename="rf_regressor.pkl"
+)
+
 rf_regressor = pickle.load(open(rf_model_path, "rb"))
 
 # Home route
