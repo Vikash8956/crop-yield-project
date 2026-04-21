@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import os
-from huggingface_hub import hf_hub_download   # ✅ ADD THIS
+from huggingface_hub import hf_hub_download   # ✅ ADD THIs
 
 # Flask app
 application = Flask(__name__)
